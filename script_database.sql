@@ -1,12 +1,3 @@
-CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin@123';
-
-CREATE DATABASE IF NOT EXISTS ordemservico CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ordemservico;
-
-GRANT ALL PRIVILEGES ON ordemservico.* TO 'admin'@'localhost';
-
-FLUSH PRIVILEGES;
-
 -- USUARIOS
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT,
