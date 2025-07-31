@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>API - Sistema de Ordens de Serviço</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@3/swagger-ui.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #swagger-ui {
+            padding: 20px;
+        }
+        .topbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                spec: {
+                    openapi: "3.0.0",
+                    info: {
+                        title: "API - Sistema de Ordens de Serviço",
+                        version: "1.0.0",
+                        description: "API RESTful em PHP para gerenciar clientes, produtos e ordens de serviço"
+                    },
+                    servers: [
+                        {
+                            url: "http://ordemservico/public",
+                            description: "Servidor local"
+                        }
+                    ],
+                    paths: {
+                        "/api.php?resource=login": {
+                            post: {
+                                tags: ["Auth"],
+                                summary: "Autentica um usuário",
+                                requestBody: {
+                                    required: true,
+                                    content: {
+                                        "application/json": {
+                                            schema: {
+                                                type: "object",
+                                                required: ["email", "senha"],
+                                                properties: {
+                                                    email: {
+                                                        type: "string",
+                                                        format: "email",
+                                                        example: "admin@example.com"
+                                                    },
+                                                    senha: {
+                                                        type: "string",
+                                                        example: "senha123"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                responses: {
+                                    "200": {
+                                        description: "Token JWT",
+                                        content: {
+                                            "application/json": {
+                                                schema: {
+                                                    type: "object",
+                                                    properties: {
+                                                        success: {
+                                                            type: "boolean",
+                                                            example: true
+                                                        },
+                                                        token: {
+                                                            type: "string",
+                                                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                                        },
+                                                        expires_in: {
+                                                            type: "integer",
+                                                            example: 3600
+                                                        },
+                                                        token_type: {
+                                                            type: "string",
+                                                            example: "Bearer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "400": {
+                                        description: "Requisição inválida"
+                                    },
+                                    "401": {
+                                        description: "Credenciais inválidas"
+                                    }
+                                }
+                            }
+                        },
+                        "/api.php?resource=clientes": {
+                            get: {
+                                tags: ["Clientes"],
+                                summary: "Lista todos os clientes",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                responses: {
+                                    "200": {
+                                        description: "Lista de clientes",
+                                        content: {
+                                            "application/json": {
+                                                schema: {
+                                                    type: "array",
+                                                    items: {
+                                                        $ref: "#/components/schemas/Cliente"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "401": {
+                                        description: "Não autorizado"
+                                    }
+                                }
+                            },
+                            post: {
+                                tags: ["Clientes"],
+                                summary: "Cria um novo cliente",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                requestBody: {
+                                    required: true,
+                                    content: {
+                                        "application/json": {
+                                            schema: {
+                                                $ref: "#/components/schemas/ClienteInput"
+                                            }
+                                        }
+                                    }
+                                },
+                                responses: {
+                                    "201": {
+                                        description: "Cliente criado",
+                                        content: {
+                                            "application/json": {
+                                                schema: {
+                                                    $ref: "#/components/schemas/Cliente"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "400": {
+                                        description: "Dados inválidos"
+                                    }
+                                }
+                            }
+                        },
+                        "/api.php?resource=clientes/{id}": {
+                            get: {
+                                tags: ["Clientes"],
+                                summary: "Obtém um cliente por ID",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                responses: {
+                                    "200": {
+                                        description: "Cliente encontrado",
+                                        content: {
+                                            "application/json": {
+                                                schema: {
+                                                    $ref: "#/components/schemas/Cliente"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "404": {
+                                        description: "Cliente não encontrado"
+                                    }
+                                }
+                            },
+                            put: {
+                                tags: ["Clientes"],
+                                summary: "Atualiza um cliente",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                requestBody: {
+                                    required: true,
+                                    content: {
+                                        "application/json": {
+                                            schema: {
+                                                $ref: "#/components/schemas/ClienteInput"
+                                            }
+                                        }
+                                    }
+                                },
+                                responses: {
+                                    "200": {
+                                        description: "Cliente atualizado"
+                                    },
+                                    "404": {
+                                        description: "Cliente não encontrado"
+                                    }
+                                }
+                            },
+                            delete: {
+                                tags: ["Clientes"],
+                                summary: "Remove um cliente",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                responses: {
+                                    "204": {
+                                        description: "Cliente removido"
+                                    },
+                                    "404": {
+                                        description: "Cliente não encontrado"
+                                    }
+                                }
+                            }
+                        },
+                        "/api.php?resource=produtos": {
+                            get: {
+                                tags: ["Produtos"],
+                                summary: "Lista todos os produtos",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                responses: {
+                                    "200": {
+                                        description: "Lista de produtos",
+                                        content: {
+                                            "application/json": {
+                                                schema: {
+                                                    type: "array",
+                                                    items: {
+                                                        $ref: "#/components/schemas/Produto"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            post: {
+                                tags: ["Produtos"],
+                                summary: "Cria um novo produto",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                requestBody: {
+                                    required: true,
+                                    content: {
+                                        "application/json": {
+                                            schema: {
+                                                $ref: "#/components/schemas/ProdutoInput"
+                                            }
+                                        }
+                                    }
+                                },
+                                responses: {
+                                    "201": {
+                                        description: "Produto criado"
+                                    }
+                                }
+                            }
+                        },
+                        "/api.php?resource=produtos/{id}": {
+                            get: {
+                                tags: ["Produtos"],
+                                summary: "Obtém um produto por ID",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                responses: {
+                                    "200": {
+                                        description: "Produto encontrado"
+                                    },
+                                    "404": {
+                                        description: "Produto não encontrado"
+                                    }
+                                }
+                            },
+                            put: {
+                                tags: ["Produtos"],
+                                summary: "Atualiza um produto",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                requestBody: {
+                                    required: true,
+                                    content: {
+                                        "application/json": {
+                                            schema: {
+                                                $ref: "#/components/schemas/ProdutoInput"
+                                            }
+                                        }
+                                    }
+                                },
+                                responses: {
+                                    "200": {
+                                        description: "Produto atualizado"
+                                    },
+                                    "404": {
+                                        description: "Produto não encontrado"
+                                    }
+                                }
+                            },
+                            delete: {
+                                tags: ["Produtos"],
+                                summary: "Remove um produto",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                responses: {
+                                    "204": {
+                                        description: "Produto removido"
+                                    },
+                                    "404": {
+                                        description: "Produto não encontrado"
+                                    }
+                                }
+                            }
+                        },
+                        "/api.php?resource=ordens": {
+                            get: {
+                                tags: ["Ordens"],
+                                summary: "Lista todas as ordens de serviço",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                responses: {
+                                    "200": {
+                                        description: "Lista de ordens",
+                                        content: {
+                                            "application/json": {
+                                                schema: {
+                                                    type: "array",
+                                                    items: {
+                                                        $ref: "#/components/schemas/Ordem"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            post: {
+                                tags: ["Ordens"],
+                                summary: "Cria uma nova ordem de serviço",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                requestBody: {
+                                    required: true,
+                                    content: {
+                                        "application/json": {
+                                            schema: {
+                                                $ref: "#/components/schemas/OrdemInput"
+                                            }
+                                        }
+                                    }
+                                },
+                                responses: {
+                                    "201": {
+                                        description: "Ordem criada"
+                                    }
+                                }
+                            }
+                        },
+                        "/api.php?resource=ordens/{id}": {
+                            get: {
+                                tags: ["Ordens"],
+                                summary: "Obtém uma ordem por ID",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                responses: {
+                                    "200": {
+                                        description: "Ordem encontrada"
+                                    },
+                                    "404": {
+                                        description: "Ordem não encontrada"
+                                    }
+                                }
+                            },
+                            put: {
+                                tags: ["Ordens"],
+                                summary: "Atualiza uma ordem de serviço",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                requestBody: {
+                                    required: true,
+                                    content: {
+                                        "application/json": {
+                                            schema: {
+                                                $ref: "#/components/schemas/OrdemInput"
+                                            }
+                                        }
+                                    }
+                                },
+                                responses: {
+                                    "200": {
+                                        description: "Ordem atualizada"
+                                    },
+                                    "404": {
+                                        description: "Ordem não encontrada"
+                                    }
+                                }
+                            },
+                            delete: {
+                                tags: ["Ordens"],
+                                summary: "Remove uma ordem de serviço",
+                                security: [{
+                                    bearerAuth: []
+                                }],
+                                parameters: [{
+                                    $ref: "#/components/parameters/id"
+                                }],
+                                responses: {
+                                    "204": {
+                                        description: "Ordem removida"
+                                    },
+                                    "404": {
+                                        description: "Ordem não encontrada"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    components: {
+                        securitySchemes: {
+                            bearerAuth: {
+                                type: "http",
+                                scheme: "bearer",
+                                bearerFormat: "JWT"
+                            }
+                        },
+                        parameters: {
+                            id: {
+                                name: "id",
+                                in: "query",
+                                description: "ID do recurso",
+                                required: true,
+                                schema: {
+                                    type: "integer"
+                                }
+                            }
+                        },
+                        schemas: {
+                            Cliente: {
+                                type: "object",
+                                properties: {
+                                    id: {
+                                        type: "integer",
+                                        example: 1
+                                    },
+                                    nome: {
+                                        type: "string",
+                                        example: "João Silva"
+                                    },
+                                    email: {
+                                        type: "string",
+                                        format: "email",
+                                        example: "joao@example.com"
+                                    },
+                                    documento: {
+                                        type: "string",
+                                        example: "123.456.789-09"
+                                    },
+                                    logradouro: {
+                                        type: "string",
+                                        example: "Rua das Flores"
+                                    },
+                                    numero: {
+                                        type: "string",
+                                        example: "123"
+                                    },
+                                    complemento: {
+                                        type: "string",
+                                        nullable: true,
+                                        example: "Apto 101"
+                                    },
+                                    bairro: {
+                                        type: "string",
+                                        example: "Centro"
+                                    },
+                                    cidade: {
+                                        type: "string",
+                                        example: "São Paulo"
+                                    },
+                                    uf: {
+                                        type: "string",
+                                        example: "SP"
+                                    },
+                                    cep: {
+                                        type: "string",
+                                        example: "01001-000"
+                                    }
+                                }
+                            },
+                            ClienteInput: {
+                                type: "object",
+                                required: ["nome", "email"],
+                                properties: {
+                                    nome: {
+                                        type: "string",
+                                        example: "João Silva"
+                                    },
+                                    email: {
+                                        type: "string",
+                                        format: "email",
+                                        example: "joao@example.com"
+                                    },
+                                    documento: {
+                                        type: "string",
+                                        example: "123.456.789-09"
+                                    },
+                                    logradouro: {
+                                        type: "string",
+                                        example: "Rua das Flores"
+                                    },
+                                    numero: {
+                                        type: "string",
+                                        example: "123"
+                                    },
+                                    complemento: {
+                                        type: "string",
+                                        example: "Apto 101"
+                                    },
+                                    bairro: {
+                                        type: "string",
+                                        example: "Centro"
+                                    },
+                                    cidade: {
+                                        type: "string",
+                                        example: "São Paulo"
+                                    },
+                                    uf: {
+                                        type: "string",
+                                        example: "SP"
+                                    },
+                                    cep: {
+                                        type: "string",
+                                        example: "01001-000"
+                                    }
+                                }
+                            },
+                            Produto: {
+                                type: "object",
+                                properties: {
+                                    id: {
+                                        type: "integer",
+                                        example: 1
+                                    },
+                                    descricao: {
+                                        type: "string",
+                                        example: "Notebook Dell"
+                                    },
+                                    preco: {
+                                        type: "number",
+                                        format: "float",
+                                        example: 3500.99
+                                    },
+                                    dtgarantia: {
+                                        type: "string",
+                                        format: "date",
+                                        example: "2023-12-31"
+                                    },
+                                    ativo: {
+                                        type: "boolean",
+                                        example: true
+                                    }
+                                }
+                            },
+                            ProdutoInput: {
+                                type: "object",
+                                required: ["descricao", "preco"],
+                                properties: {
+                                    descricao: {
+                                        type: "string",
+                                        example: "Notebook Dell"
+                                    },
+                                    preco: {
+                                        type: "number",
+                                        format: "float",
+                                        example: 3500.99
+                                    },
+                                    dtgarantia: {
+                                        type: "string",
+                                        format: "date",
+                                        example: "2023-12-31"
+                                    },
+                                    ativo: {
+                                        type: "boolean",
+                                        example: true
+                                    }
+                                }
+                            },
+                            Ordem: {
+                                type: "object",
+                                properties: {
+                                    id_ordem: {
+                                        type: "integer",
+                                        example: 1
+                                    },
+                                    cliente_id: {
+                                        type: "integer",
+                                        example: 1
+                                    },
+                                    produto_id: {
+                                        type: "integer",
+                                        example: 1
+                                    },
+                                    descricao: {
+                                        type: "string",
+                                        example: "Troca de tela"
+                                    },
+                                    dtabertura: {
+                                        type: "string",
+                                        format: "date-time",
+                                        example: "2023-01-15 10:30:00"
+                                    },
+                                    cliente_nome: {
+                                        type: "string",
+                                        example: "João Silva"
+                                    },
+                                    produto_nome: {
+                                        type: "string",
+                                        example: "Notebook Dell"
+                                    }
+                                }
+                            },
+                            OrdemInput: {
+                                type: "object",
+                                required: ["cliente_id", "produto_id", "descricao"],
+                                properties: {
+                                    cliente_id: {
+                                        type: "integer",
+                                        example: 1
+                                    },
+                                    produto_id: {
+                                        type: "integer",
+                                        example: 1
+                                    },
+                                    descricao: {
+                                        type: "string",
+                                        example: "Troca de tela"
+                                    },
+                                    dtabertura: {
+                                        type: "string",
+                                        format: "date-time",
+                                        example: "2023-01-15 10:30:00"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                dom_id: '#swagger-ui',
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                layout: "StandaloneLayout",
+                deepLinking: true,
+                docExpansion: 'none',
+                defaultModelsExpandDepth: -1,
+                validatorUrl: null,
+                displayRequestDuration: true,
+                tryItOutEnabled: true
+            });
+
+            // Armazenar token JWT após login
+            ui.initOAuth({
+                onComplete: function() {
+                    const token = ui.authActions.getConfigs().additionalQueryStringParams.token;
+                    if (token) {
+                        ui.preauthorizeApiKey('bearerAuth', token);
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>
