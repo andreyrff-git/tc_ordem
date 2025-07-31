@@ -2,60 +2,65 @@ openapi: 3.0.0
 info:
   title: API - Sistema de Ordens de Serviço
   version: 1.0.0
-  description: API RESTful em PHP para gerenciar clientes, produtos e ordens de serviço
+  description: API RESTful em PHP para gerenciar clientes, produtos e ordens de serviço, com autenticação JWT.
 
 servers:
-  - url: http://ordemservico/public
-    description: Servidor local
+  - url: http://ordemservico/public/api.php
 
 paths:
-  /api.php?resource=login:
+  ?resource=login:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Autentica um usuário
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Login'
+              type: object
+              properties:
+                email:
+                  type: string
+                senha:
+                  type: string
       responses:
-        200:
-          description: Token JWT
+        '200':
+          description: Token JWT retornado com sucesso
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        400:
-          $ref: '#/components/responses/BadRequest'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        500:
-          $ref: '#/components/responses/ServerError'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  token_type:
+                    type: string
+        '401':
+          description: Credenciais inválidas
 
-  /api.php?resource=clientes:
+  ?resource=clientes:
     get:
-      tags: [Clientes]
-      summary: Lista todos os clientes
+      summary: Listar todos os clientes
       security:
         - bearerAuth: []
       responses:
-        200:
+        '200':
           description: Lista de clientes
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Cliente'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        500:
-          $ref: '#/components/responses/ServerError'
-
+                  type: object
+        '401':
+          description: Token inválido        
     post:
-      tags: [Clientes]
-      summary: Cria um novo cliente
+      summary: Criar um novo cliente
       security:
         - bearerAuth: []
       requestBody:
@@ -63,84 +68,312 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClienteInput'
+              type: object
+              properties:
+                nome:
+                  type: string
+                email:
+                  type: string
       responses:
-        201:
+        '201':
           description: Cliente criado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Cliente'
-        400:
-          $ref: '#/components/responses/BadRequest'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        500:
-          $ref: '#/components/responses/ServerError'
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    nome:
+                      type: string
+                      example: "João Silva"
+                    email:
+                      type: string
+                      format: email
+                      example: "joao@example.com"
+                    documento:
+                      type: string
+                      example: "123.456.789-09"
+                    logradouro:
+                      type: string
+                      example: "Rua das Flores"
+                    numero:
+                      type: string
+                      example: "123"
+                    complemento:
+                      type: string
+                      nullable: true
+                      example: "Apto 101"
+                    bairro:
+                      type: string
+                      example: "Centro"
+                    cidade:
+                      type: string
+                      example: "São Paulo"
+                    uf:
+                      type: string
+                      example: "SP"
+                    cep:
+                      type: string
+                      example: "01001-000"
+          
 
-  /api.php?resource=clientes/{id}:
+  ?resource=clientes/{id}:
     get:
-      tags: [Clientes]
-      summary: Obtém um cliente por ID
+      summary: Obter cliente por ID
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/Id'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        200:
-          description: Cliente encontrado
+        '200':
+          description: Cliente retornado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Cliente'
-        404:
-          $ref: '#/components/responses/NotFound'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-
+                type: array
+                items:
+                  type: object
+        '401':
+          description: Token inválido           
     put:
-      tags: [Clientes]
-      summary: Atualiza um cliente
+      summary: Atualizar cliente
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/Id'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClienteInput'
+              type: object
+              properties:
+                nome:
+                  type: string
+                email:
+                  type: string
       responses:
-        200:
+        '200':
           description: Cliente atualizado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cliente'
-        400:
-          $ref: '#/components/responses/BadRequest'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        404:
-          $ref: '#/components/responses/NotFound'
-
     delete:
-      tags: [Clientes]
-      summary: Remove um cliente
+      summary: Remover cliente
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/Id'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        204:
+        '204':
           description: Cliente removido
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        404:
-          $ref: '#/components/responses/NotFound'
 
-  # Repetir o mesmo padrão para produtos e ordens...
+  ?resource=produtos:
+    get:
+      summary: Listar todos os produtos
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '401':
+          description: Token inválido           
+    post:
+      summary: Criar um novo produto
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome:
+                  type: string
+                preco:
+                  type: number
+      responses:
+        '201':
+          description: Produto criado
+
+  ?resource=produtos/{id}:
+    get:
+      summary: Obter produto por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produto retornado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '401':
+          description: Token inválido           
+    put:
+      summary: Atualizar produto
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome:
+                  type: string
+                preco:
+                  type: number
+      responses:
+        '200':
+          description: Produto atualizado
+    delete:
+      summary: Remover produto
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Produto removido
+
+  ?resource=ordens:
+    get:
+      summary: Listar ordens de serviço
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de ordens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '401':
+          description: Token inválido           
+    post:
+      summary: Criar nova ordem de serviço
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cliente_id:
+                  type: integer
+                produto_id:
+                  type: integer
+                descricao:
+                  type: string
+      responses:
+        '201':
+          description: Ordem criada
+
+  ?resource=ordens/{id}:
+    get:
+      summary: Obter ordem por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ordem retornada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '401':
+          description: Token inválido           
+    put:
+      summary: Atualizar ordem de serviço
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cliente_id:
+                  type: integer
+                produto_id:
+                  type: integer
+                descricao:
+                  type: string
+      responses:
+        '200':
+          description: Ordem atualizada
+    delete:
+      summary: Remover ordem de serviço
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Ordem removida
 
 components:
   securitySchemes:
@@ -148,135 +381,3 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
-  parameters:
-    Id:
-      name: id
-      in: query
-      description: ID do recurso
-      required: true
-      schema:
-        type: integer
-
-  schemas:
-    Login:
-      type: object
-      required: [email, senha]
-      properties:
-        email:
-          type: string
-          format: email
-        senha:
-          type: string
-
-    AuthResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-        token:
-          type: string
-        expires_in:
-          type: integer
-        token_type:
-          type: string
-
-    Cliente:
-      type: object
-      properties:
-        id:
-          type: integer
-        nome:
-          type: string
-        email:
-          type: string
-          format: email
-        documento:
-          type: string
-        logradouro:
-          type: string
-        numero:
-          type: string
-        complemento:
-          type: string
-          nullable: true
-        bairro:
-          type: string
-        cidade:
-          type: string
-        uf:
-          type: string
-        cep:
-          type: string
-
-    ClienteInput:
-      type: object
-      required: [nome, email]
-      properties:
-        nome:
-          type: string
-        email:
-          type: string
-          format: email
-        documento:
-          type: string
-        logradouro:
-          type: string
-        numero:
-          type: string
-        complemento:
-          type: string
-        bairro:
-          type: string
-        cidade:
-          type: string
-        uf:
-          type: string
-        cep:
-          type: string
-
-    # Adicionar schemas para Produto e Ordem...
-
-  responses:
-    BadRequest:
-      description: Requisição inválida
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              message:
-                type: string
-
-    Unauthorized:
-      description: Não autorizado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
-    NotFound:
-      description: Recurso não encontrado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
-    ServerError:
-      description: Erro no servidor
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
-    ErrorResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        message:
-          type: string
